@@ -1,0 +1,90 @@
+<?php
+
+namespace Tests\Unit;
+
+use Tests\TestCase;
+use App\Models\Pessoa;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+class PessoaTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_index_displays_pessoas(){
+        Pessoa::factory()->count(3)->create();
+
+        $response = $this->get(route('pessoas.index'));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('pessoas.index');
+        $response->assertViewHas('pessoas');
+    }
+
+    public function test_create_displays_form(){
+        $response = $this->get(route('pessoas.create'));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('pessoas.create');
+    }
+
+    public function test_store_saves_new_pessoa(){
+        $data = [
+            'nome' => 'Ulpianus',
+            'email' => 'ulpianus@thehunter.com',
+            'telefone' => '123456789',
+        ];
+
+        $response = $this->post(route('pessoas.store'), $data);
+
+        $response->assertRedirect(route('pessoas.index'));
+        $this->assertDatabaseHas('pessoas', $data);
+    }
+
+    public function test_edit_displays_edit_form(){
+        $pessoa = Pessoa::factory()->create();
+
+        $response = $this->get(route('pessoas.edit', $pessoa));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('pessoas.edit');
+        $response->assertViewHas('pessoa', $pessoa);
+    }
+
+    public function test_update_modifies_existing_pessoa(){
+        $pessoa = Pessoa::factory()->create([
+            'email' => 'original@example.com',
+        ]);
+
+        $newData = [
+            'nome' => 'Novo Nome',
+            'email' => 'novo@example.com',
+            'telefone' => '999999999',
+        ];
+
+        $response = $this->put(route('pessoas.update', $pessoa), $newData);
+
+        $response->assertRedirect(route('pessoas.index'));
+        $this->assertDatabaseHas('pessoas', $newData);
+    }
+
+    public function test_destroy_deletes_pessoa(){
+        $pessoa = Pessoa::factory()->create();
+
+        $response = $this->delete(route('pessoas.destroy', $pessoa));
+
+        $response->assertRedirect(route('pessoas.index'));
+        $this->assertDatabaseMissing('pessoas', ['id' => $pessoa->id]);
+    }
+
+    public function test_store_fails_with_invalid_data(){
+        $response = $this->post(route('pessoas.store'), [
+            'nome' => '', // obrigatório
+            'email' => 'invalid-email',
+            'telefone' => '',
+        ]);
+
+        $response->assertSessionHasErrors(['nome', 'email', 'telefone']);
+        $this->assertDatabaseCount('pessoas', 0);
+    }
+
+}
