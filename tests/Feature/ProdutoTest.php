@@ -4,72 +4,71 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use App\Models\Conta;
+use App\Models\Produto;
 
-class ContaTest extends TestCase
+class ProdutoTest extends TestCase
 {
     use RefreshDatabase;
 
     /** @test */
-    public function consegue_listar_contas()
+    public function consegue_listar_produtos()
     {
-        Conta::factory()->count(3)->create([
-            'nome' => 'Conta Exemplo'
+        Produto::create([
+            'nome' => 'Produto Exemplo',
+            'preco' => 9.99,
+            'descricao' => 'Produto de teste',
         ]);
 
-        $response = $this->get('/contas');
-
+        $response = $this->get('/produtos');
         $response->assertStatus(200);
-        $response->assertSee('Conta Exemplo');
+        $response->assertSee('Produto Exemplo');
     }
 
     /** @test */
-    public function consegue_criar_uma_conta()
+    public function consegue_criar_um_produto()
     {
-        $response = $this->post('/contas', [
-            'nome' => 'Conta Corrente',
-            'saldo' => 1000.00,
-            'descricao' => 'Conta principal'
+        $response = $this->post('/produtos', [
+            'nome' => 'Caneta Azul',
+            'preco' => 9.99,
+            'descricao' => 'Produto Musical',
         ]);
-
-        $response->assertRedirect('/contas');
-        $this->assertDatabaseHas('contas', [
-            'nome' => 'Conta Corrente',
-            'saldo' => 1000.00,
-            'descricao' => 'Conta principal'
-        ]);
-    }
-
-    /** @test */
-    public function consegue_atualizar_uma_conta()
-    {
-        $conta = Conta::factory()->create([
-            'nome' => 'Conta Antiga',
-            'saldo' => 500.00
-        ]);
-
-        $response = $this->put("/contas/{$conta->id}", [
-            'nome' => 'Conta Atualizada',
-            'saldo' => 750.00,
-            'descricao' => 'Conta modificada'
-        ]);
-
-        $response->assertRedirect('/contas');
-        $this->assertDatabaseHas('contas', [
-            'id' => $conta->id,
-            'nome' => 'Conta Atualizada',
-            'saldo' => 750.00
+        $response->assertRedirect('/produtos');
+        $this->assertDatabaseHas('produtos', [
+            'nome' => 'Caneta Azul',
         ]);
     }
 
     /** @test */
-    public function consegue_deletar_uma_conta()
+    public function consegue_atualizar_um_produto()
     {
-        $conta = Conta::factory()->create();
+        $produto = Produto::create([
+            'nome' => 'Lápis Azul',
+            'preco' => 1.50,
+            'descricao' => 'Item escolar',
+        ]);
 
-        $response = $this->delete("/contas/{$conta->id}");
+        $response = $this->put("/produtos/{$produto->id}", [
+            'nome' => 'Lápis Vermelho',
+            'preco' => 1.50,
+            'descricao' => 'Produto atualizado',
+        ]);
 
-        $response->assertRedirect('/contas');
-        $this->assertDatabaseMissing('contas', ['id' => $conta->id]);
+        $response->assertRedirect('/produtos');
+        $this->assertDatabaseHas('produtos', ['nome' => 'Lápis Vermelho']);
+    }
+
+    /** @test */
+    public function consegue_deletar_um_produto()
+    {
+        $produto = Produto::create([
+            'nome' => 'Caneta Azul',
+            'preco' => 9.99,
+            'descricao' => 'Produto Musical',
+        ]);
+
+        $response = $this->delete("/produtos/{$produto->id}");
+        $response->assertRedirect('/produtos');
+
+        $this->assertDatabaseMissing('produtos', ['id' => $produto->id]);
     }
 }
